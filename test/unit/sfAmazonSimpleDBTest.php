@@ -5,7 +5,7 @@ $sf_root = dirname(__FILE__).'/../../../..';
 include($sf_root.'/test/bootstrap/functional.php');
 require_once($sf_root.'/lib/symfony/vendor/lime/lime.php');
 
-$t = new lime_test(44, new lime_output_color());
+$t = new lime_test(54, new lime_output_color());
 
 $service = sfAmazonSimpleDBClient::getInstance();
 $t->isa_ok($service, 'sfAmazonSimpleDBClient', 'getClient() retrieve an Amazon_SimpleDB_Client instance');
@@ -13,8 +13,10 @@ $t->isa_ok($service, 'sfAmazonSimpleDBClient', 'getClient() retrieve an Amazon_S
 $t->diag('Test domain creation');
 try
 {
-  $domainCreation = $service->createDomain('sfAmazonSimpleDBPluginTestDomain');
-  $t->ok($domainCreation, 'createDomain() confirms domain has been created');
+  $domainCreation1 = $service->createDomain('sfAmazonSimpleDBPluginTestDomain');
+  $domainCreation2 = $service->createDomain('sfAmazonSimpleDBPluginTestDomain2');
+  $domainCreation3 = $service->createDomain('sfAmazonSimpleDBPluginTestDomain3');
+  $t->ok($domainCreation1 && $domainCreation2 && $domainCreation3, 'createDomain() confirms domain has been created');
   $t->pass('createDomain() does not throw an exception');
 }
 catch (Exception $e)
@@ -25,9 +27,23 @@ catch (Exception $e)
 $t->diag('Test domain list');
 try
 {
-  $domainsList = $service->listDomains();
+  $domainsResults = $service->listDomains();
+  $domainsList = $domainsResults['results'];
   $t->isa_ok($domainsList, 'array', 'listDomains() returns an array');
   $t->ok(in_array('sfAmazonSimpleDBPluginTestDomain', $domainsList), 'listDomains() lists new created domain');
+  $t->ok(in_array('sfAmazonSimpleDBPluginTestDomain2', $domainsList), 'listDomains() lists new created domain');
+  $t->ok(in_array('sfAmazonSimpleDBPluginTestDomain3', $domainsList), 'listDomains() lists new created domain');
+  
+  $t->diag('Testing limit and offseting for domains list');
+  $domainsResults = $service->listDomains(2);
+  $domainsList = $domainsResults['results'];
+  $t->is(count($domainsList), 2, 'listDomains() retrieves the correct limited number of results');
+  $t->ok(isset($domainsResults['next_token']), 'listDomains() returns a next token');
+  
+  $domainsResultsNext = $service->listDomains(2, $domainsResults['next_token']);
+  $domainsResultsListNext = $domainsResultsNext['results'];
+  $t->is(count($domainsResultsListNext), 1, 'listDomains() retrieves the correct limited number of results with an offset');
+  
   $t->pass('listDomains() does not throw an exception');
 }
 catch (Exception $e)
@@ -82,20 +98,34 @@ $t->diag('Test querying');
 try
 {
   $t->diag(' 1. Getting all data');
-  $query = $service->query();
-  $t->isa_ok($query, 'array', 'query() retrieves results as an array');
-  $t->is(count($query), 3, 'query() retrieves the correct number of results');
+  $queryResults = $service->query();
+  $queryResultsList = $queryResults['results'];
+  $t->isa_ok($queryResultsList, 'array', 'query() retrieves results as an array');
+  $t->is(count($queryResultsList), 3, 'query() retrieves the correct number of results');
   
   $t->diag(' 2. Filtering one attribute');
-  $query = $service->query("['Color' = 'Red']");
-  $t->isa_ok($query, 'array', 'query() retrieves results as an array');
-  $t->is(count($query), 1, 'query() retrieves the correct number of results');
-  $t->is($query[0], 'Entry #2', 'query() retrieves the correct result');
+  $queryResults = $service->query("['Color' = 'Red']");
+  $queryResultsList = $queryResults['results'];
+  $t->isa_ok($queryResultsList, 'array', 'query() retrieves results as an array');
+  $t->is(count($queryResultsList), 1, 'query() retrieves the correct number of results');
+  $t->is($queryResultsList[0], 'Entry #2', 'query() retrieves the correct result');
   
   $t->diag(' 3. Filtering multiple attributes');
-  $query = $service->query("['Color' = 'Green'] intersection ['Size' = 'Small']");
-  $t->is(count($query), 1, 'query() retrieves the correct number of results');
-  $t->is($query[0], 'Entry #3', 'query() retrieves the correct result');
+  $queryResults = $service->query("['Color' = 'Green'] intersection ['Size' = 'Small']");
+  $queryResultsList = $queryResults['results'];
+  $t->is(count($queryResultsList), 1, 'query() retrieves the correct number of results');
+  $t->is($queryResultsList[0], 'Entry #3', 'query() retrieves the correct result');
+  
+  $t->diag(' 4. Testing limit and offseting for results list');
+  $queryResults = $service->query(null, 2);
+  $queryResultsList = $queryResults['results'];
+  $t->is(count($queryResultsList), 2, 'query() retrieves the correct limited number of results');
+  $t->ok(isset($queryResults['next_token']), 'query() retrieves a next token attribute');
+    
+  $queryResultsNext = $service->query(null, 2, $queryResults['next_token']);
+  $queryResultsListNext = $queryResultsNext['results'];
+  $t->is(count($queryResultsListNext), 1, 'query() retrieves the correct limited number of results with an offset');
+  
   $t->pass('query() does not throw an exception');
 }
 catch (Exception $e)
@@ -160,8 +190,10 @@ catch (Exception $e)
 $t->diag('Test domain deletion');
 try
 {
-  $domainDeletion = $service->deleteDomain('sfAmazonSimpleDBPluginTestDomain');
-  $t->ok($domainDeletion, 'deleteDomain() confirms domain has been deleted');
+  $domainDeletion1 = $service->deleteDomain('sfAmazonSimpleDBPluginTestDomain');
+  $domainDeletion2 = $service->deleteDomain('sfAmazonSimpleDBPluginTestDomain2');
+  $domainDeletion3 = $service->deleteDomain('sfAmazonSimpleDBPluginTestDomain3');
+  $t->ok($domainDeletion1 && $domainDeletion2 && $domainDeletion3, 'deleteDomain() confirms domain has been deleted');
   $t->pass('deleteDomain() does not throw an exception');
 }
 catch (Exception $e)
@@ -169,6 +201,9 @@ catch (Exception $e)
   $t->fail('deleteDomain() throwed an exception: '.$e->getMessage());
 }
 
-$domainsList = $service->listDomains();
+$domainsResults = $service->listDomains();
+$domainsList = $domainsResults['results'];
 $t->ok(!in_array('sfAmazonSimpleDBPluginTestDomain', $domainsList), 'listDomains() no more lists deleted domain');
+$t->ok(!in_array('sfAmazonSimpleDBPluginTestDomain2', $domainsList), 'listDomains() no more lists deleted domain');
+$t->ok(!in_array('sfAmazonSimpleDBPluginTestDomain3', $domainsList), 'listDomains() no more lists deleted domain');
 $t->is($service->getSelectedDomain(), null, 'getSelectedDomain() no more returns a deleted domain as selected');

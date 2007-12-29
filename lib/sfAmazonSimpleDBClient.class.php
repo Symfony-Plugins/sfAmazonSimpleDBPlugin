@@ -146,15 +146,26 @@ class sfAmazonSimpleDBClient
   /**
    * Lists available domains
    *
+   * @param int  $max     Max entries to retrieve (optional)
+   * @param int  $offset  Offset to start with (optional)
    * @return array of strings
    * @throws sfAmazonSimpleDBException
    */
-  public function listDomains()
+  public function listDomains($max = null, $offset = null)
   {
     try
     {
       $results = array();
       $action = new Amazon_SimpleDB_Model_ListDomains();
+      if (!is_null($max) && $max > 0)
+      {
+        $action->setMaxNumberOfDomains($max);
+      }
+      if (!is_null($offset))
+      {
+        $action->setNextToken($offset);
+      }
+      $results = array('results' => array());
       sfLogger::getInstance()->info('Listing existing domains');
       $response = self::getClient()->listDomains($action);
       if ($response->isSetListDomainsResult()) 
@@ -163,8 +174,24 @@ class sfAmazonSimpleDBClient
         $domainNameList    = $listDomainsResult->getDomainName();
         foreach ($domainNameList as $domainName) 
         { 
-          $results[] = $domainName;  
-        } 
+          $results['results'][] = $domainName;  
+        }
+        if ($listDomainsResult->isSetNextToken()) 
+        {
+          $results['next_token'] = $listDomainsResult->getNextToken();
+        }
+      }
+      if ($response->isSetResponseMetadata()) 
+      { 
+        $responseMetadata = $response->getResponseMetadata();
+        if ($responseMetadata->isSetRequestId()) 
+        {
+          $results['request_id'] = $responseMetadata->getRequestId();
+        }
+        if ($responseMetadata->isSetBoxUsage()) 
+        {
+          $results['box_usage'] = $responseMetadata->getBoxUsage();
+        }
       }
       return $results;
     }
@@ -302,11 +329,14 @@ class sfAmazonSimpleDBClient
   /**
    * Query database with given expression
    *
-   * @param  string  $expression
-   * @param  string  $domain
+   * @param  string  $expression  Query expression (optional)
+   * @param  int     $max         Max entries to retrieve (optional)
+   * @param  int     $offset      Offset to start with (optional)
+   * @param  string  $domain      Domain to query (optional)
    * @return array
+   * @link   http://docs.amazonwebservices.com/AmazonSimpleDB/2007-11-07/DeveloperGuide/SDB_API_Query.html#SDB_API_Query_QueryExpressionSyntax
    */
-  public function query($expression = null, $domain = null)
+  public function query($expression = null, $max = null, $offset = null, $domain = null)
   {
     if (is_null($domain))
     {
@@ -316,12 +346,20 @@ class sfAmazonSimpleDBClient
     {
       throw new sfAmazonSimpleDBException('query(): No domain has been selected nor specified');
     }
-    $results = array();
+    $results = array('results' => array());
     $action = new Amazon_SimpleDB_Model_Query();
     $action->setDomainName($domain);
     if (!is_null($expression))
     {
       $action->setQueryExpression($expression);
+    }
+    if (!is_null($max) && $max > 0)
+    {
+      $action->setMaxNumberOfItems($max);
+    }
+    if (!is_null($offset))
+    {
+      $action->setNextToken($offset);
     }
     sfLogger::getInstance()->info(sprintf('Querying "%s" in domain "%s"', $expression, $domain));
     $response = self::getClient()->query($action); 
@@ -331,7 +369,23 @@ class sfAmazonSimpleDBClient
       $itemNameList = $queryResult->getItemName();
       foreach ($itemNameList as $itemName)
       {
-        $results[] = $itemName;
+        $results['results'][] = $itemName;
+      }
+      if ($queryResult->isSetNextToken()) 
+      {
+        $results['next_token'] = $queryResult->getNextToken();
+      }
+    }
+    if ($response->isSetResponseMetadata()) 
+    { 
+      $responseMetadata = $response->getResponseMetadata();
+      if ($responseMetadata->isSetRequestId()) 
+      {
+        $results['request_id'] = $responseMetadata->getRequestId();
+      }
+      if ($responseMetadata->isSetBoxUsage()) 
+      {
+        $results['box_usage'] = $responseMetadata->getBoxUsage();
       }
     }
     return $results;

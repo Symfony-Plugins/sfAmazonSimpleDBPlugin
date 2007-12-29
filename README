@@ -59,11 +59,24 @@ $domainCreation = $service->createDomain('Products');
 
 === Listing domains ===
 
-To list available domains for yourt accounts :
+To list available domains for your AWS account :
 
 {{{
-$domains = $service->listDomains();
-echo implode(', ', $domains);
+$domainsQuery = $service->listDomains();
+echo implode(', ', $domainsQuery['results']);
+}}}
+
+You can even limit the number of results, eg. for pagination purpose:
+
+{{{
+$domainsQuery = $service->listDomains(5);
+echo '5 first domains : '.implode(', ', $domainsQuery['results']);
+
+if (isset($domainsQuery['next_token']))
+{
+  $nextDomainsQuery = $service->listDomains(5, $domainsQuery['next_token']);
+  echo 'Next 5 domains : '.implode(', ', $nextDomainsQuery['results']);
+}
 }}}
 
 === Selecting a domain ===
@@ -104,8 +117,23 @@ The query syntax of SimpleDB is very simple. here's the way to retrieve all
 small and red products : 
 
 {{{
-$products = $service->query("['Color' = 'Red'] intersection ['Size' = 'Small']");
-echo 'Red small products are '.implode(', ', $results);
+$resultsQuery = $service->query("['Color' = 'Red'] intersection ['Size' = 'Small']");
+echo 'Red small products are '.implode(', ', $resultsQuery['results']);
+}}}
+
+[http://docs.amazonwebservices.com/AmazonSimpleDB/2007-11-07/DeveloperGuide/SDB_API_Query.html#SDB_API_Query_QueryExpressionSyntax More on query syntax and available operators].
+
+You can even limit the number of results, eg. for pagination purpose:
+
+{{{
+$resultsQuery = $service->query("['Color' = 'Red']", 5)
+echo '5 first results : '.implode(', ', $resultsQuery['results']);
+
+if (isset($resultsQuery['next_token']))
+{
+  $nextResultsQuery = $service->query("['Color' = 'Red']", 5, $resultsQuery['next_token']);
+  echo 'Next 5 results : '.implode(', ', $nextResultsQuery['results']);
+}
 }}}
 
 === Attribute replacement (record update) ===
