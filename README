@@ -1,0 +1,167 @@
+= sfAmazonSimpleDBPlugin =
+
+This plugin provide Symfony integration for the 
+[http://www.amazon.com/b/ref=sc_fe_l_2?ie=UTF8&node=342335011&no=3435361&me=A36L942TSJ2AJA Amazon SimpleDB service].
+
+== Prerequisites ==
+
+You need to have an access to the Amazon SimpleDB service, and have an access id
+and an associated private secret key.
+
+If you don't have an account yet, you can [http://www.amazon.com/b/ref=sc_fe_l_2?ie=UTF8&node=342335011&no=3435361&me=A36L942TSJ2AJA request for it here].
+
+== Installation ==
+
+For the moment this plugin is only available from the 
+[http://svn.symfony-project.org/plugins Symfony plugins SVN 
+repository], in an alpha state. Use with caution !
+
+To install the plugin into your existing project, checkout the source into your
+{{{plugins}}} directory like this:
+
+{{{
+$ cd /path/to/project/root
+$ svn co http://svn.symfony-project.org/plugins/sfAmazonSimpleDBPlugin/trunk plugins/sfAmazonSimpleDBPlugin
+$ php symfony cc
+}}}
+
+Now configure your identifiers in the {{{app.yml}}} of your application(s), 
+adding these lines :
+
+{{{
+  sfAmazonSimpleDBPlugin:
+    aws_access_key:         abcdefghijk12345
+    aws_secret_key:         01234567890AbCdEfGhIjKlMnOpQ
+}}}
+
+You're done and ready to use the plugin.
+
+== Usage ==
+
+Here are some basic operations you can do with the plugin API :
+
+=== Amazon SimpleDB client instanciation ===
+
+To instanciate the SimpleDB client :
+
+{{{
+$service = sfAmazonSimpleDBClient::getInstance();
+}}}
+
+=== Creating a domain ===
+
+A domain is something like a database table. Here, to create a domain named 
+{{{Products}}} :
+
+{{{
+$domainCreation = $service->createDomain('Products');
+}}}
+
+=== Listing domains ===
+
+To list available domains for yourt accounts :
+
+{{{
+$domains = $service->listDomains();
+echo implode(', ', $domains);
+}}}
+
+=== Selecting a domain ===
+
+To select a domain to do some operation :
+
+{{{
+$service->selectDomain('Products');
+}}}
+
+Note that you can chain methods, like this :
+
+{{{
+$service->selectDomain('Products')->query("['Color' = 'Blue']");
+}}}
+
+=== Inserting data ===
+
+To insert some rows in the database, do the following :
+
+{{{
+$service->selectDomain('Products');
+$service->putAttributes('Shirt',    array('Color' => 'Blue', 'Size' => 'Big'));
+$service->putAttributes('Trousers', array('Color' => 'Red',  'Size' => 'Medium'));
+}}}
+
+A nice feature of SimpleDB is to handle multiple attribute values. Eg if we want 
+our Hat product to have both yellow, green and purple colors available :
+
+{{{
+$service->putAttributes('Hat', array('Color' => array('Yellow', 'Green', 'Red'), 
+                                     'Size'  => 'Small'));
+}}}
+
+=== Querying the database ===
+
+The query syntax of SimpleDB is very simple. here's the way to retrieve all 
+small and red products : 
+
+{{{
+$products = $service->query("['Color' = 'Red'] intersection ['Size' = 'Small']");
+echo 'Red small products are '.implode(', ', $results);
+}}}
+
+=== Attribute replacement (record update) ===
+
+To update the properties of a product, we can do the following :
+
+{{{
+$replacement = $service->putAttributes('Trousers', array('Color' => 'Black',
+                                                         'Size'  => 'Tiny'), true);
+}}}
+
+Here all old attributes will be overidden by the new provided ones. 
+
+=== Attributes deletion ===
+
+To reset the value of an attribute for a product, we can do :
+
+{{{
+$service->deleteAttributes('Hat', 'Color', 'Red');
+}}}
+
+To remove all values for a given attribute name :
+
+{{{
+$service->deleteAttributes('Hat', 'Color');
+}}}
+
+=== Entry deletion ===
+
+To completely delete an entry (here a product), we must delete all its related 
+attributes :
+
+{{{
+$service->deleteAttributes('Hat');
+}}}  
+
+=== Domain deletion ===
+
+To recursively delete a domain and all related entries :
+
+{{{
+$service->deleteDomain('Products');
+}}}
+
+== TODO ==
+
+ * Create a module to administrate Amazon SimpleDB databases
+
+== Changelog ==
+
+=== 2007-12-29 ===
+
+ * Initial commit
+
+== Contact and licensing informations ==
+
+This plugin has been released by [http://prendreuncafe.com Nicolas Perriault] 
+<nperriault AT gmail.com> and is licensed under the 
+[http://en.wikipedia.org/wiki/MIT_License MIT license]. 

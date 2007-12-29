@@ -1,0 +1,133 @@
+<?php
+/** 
+ *  PHP Version 5
+ *
+ *  @category    Amazon
+ *  @package     Amazon_SimpleDB
+ *  @copyright   Copyright 2007 Amazon Technologies, Inc.
+ *  @link        http://aws.amazon.com
+ *  @license     http://aws.amazon.com/apache2.0  Apache License, Version 2.0
+ *  @version     2007-11-07
+ */
+/******************************************************************************* 
+ *    __  _    _  ___ 
+ *   (  )( \/\/ )/ __)
+ *   /__\ \    / \__ \
+ *  (_)(_) \/\/  (___/
+ * 
+ *  Amazon Simple DB PHP5 Library
+ *  Generated: Thu Dec 27 02:50:26 PST 2007
+ * 
+ */
+
+/**
+ * Get Attributes  Sample
+ */
+
+set_include_path(get_include_path() . PATH_SEPARATOR . '../../../.');  
+
+
+/************************************************************************
+ * Access Key ID and Secret Acess Key ID, obtained from:
+ * http://aws.amazon.com
+ ***********************************************************************/
+ $AWS_ACCESS_KEY_ID        = '<Your Access Key ID>';
+ $AWS_SECRET_ACCESS_KEY    = '<Your Secret Access Key>';
+
+/************************************************************************
+ * Instantiate an Implementation of Simple DB 
+ ***********************************************************************/
+ require_once ('Amazon/SimpleDB/Client.php'); 
+ $service = new Amazon_SimpleDB_Client($AWS_ACCESS_KEY_ID, $AWS_SECRET_ACCESS_KEY);
+ 
+/************************************************************************
+ * Uncomment to try out Mock Service that simulates Amazon_SimpleDB
+ * responses without calling Amazon_SimpleDB service.
+ *
+ * Responses are loaded from local XML files. You can tweak XML files to
+ * experiment with various outputs during development
+ *
+ * XML files available under Amazon/SimpleDB/Mock tree
+ *
+ ***********************************************************************/
+ // require_once ('Amazon/SimpleDB/Mock.php'); 
+ // $service = new Amazon_SimpleDB_Mock();
+
+/************************************************************************
+ * Setup action parameters and uncomment invoke to try out 
+ * sample for Get Attributes Action
+ ***********************************************************************/
+ require_once ('Amazon/SimpleDB/Model/GetAttributes.php'); 
+ // @TODO: set action. Action can be passed as Amazon_SimpleDB_Model_GetAttributes 
+ // object or array of parameters
+ // invokeGetAttributes($service, $action);
+
+                                        
+    /**
+     * Get Attributes Action Sample
+     * Returns all of the attributes associated with the item. Optionally, the attributes returned can be limited to
+     * the specified AttributeName parameter.
+     * If the item does not exist on the replica that was accessed for this operation, an empty attribute is
+     * returned. The system does not return an error as it cannot guarantee the item does not exist on other
+     * replicas.
+     *   
+     * @param Amazon_SimpleDB_Interface $service instance of Amazon_SimpleDB_Interface
+     * @param mixed $action Amazon_SimpleDB_Model_GetAttributes or array of parameters
+     */
+  function invokeGetAttributes(Amazon_SimpleDB_Interface $service, $action) 
+  {
+      try {
+            
+              $response = $service->getAttributes($action);
+
+              
+                echo ("Service Response\n");
+                echo ("=============================================================================\n");
+
+                echo("        GetAttributesResponse\n");
+                if ($response->isSetGetAttributesResult()) { 
+                    echo("            GetAttributesResult\n");
+                    $getAttributesResult = $response->getGetAttributesResult();
+                    $attributeList = $getAttributesResult->getAttribute();
+                    foreach ($attributeList as $attribute) {
+                        echo("                Attribute\n");
+                        if ($attribute->isSetName()) 
+                        {
+                            echo("                    Name\n");
+                            echo("                        " . $attribute->getName() . "\n");
+                        }
+                        if ($attribute->isSetValue()) 
+                        {
+                            echo("                    Value\n");
+                            echo("                        " . $attribute->getValue() . "\n");
+                        }
+                    }
+                } 
+                if ($response->isSetResponseMetadata()) { 
+                    echo("            ResponseMetadata\n");
+                    $responseMetadata = $response->getResponseMetadata();
+                    if ($responseMetadata->isSetRequestId()) 
+                    {
+                        echo("                RequestId\n");
+                        echo("                    " . $responseMetadata->getRequestId() . "\n");
+                    }
+                    if ($responseMetadata->isSetBoxUsage()) 
+                    {
+                        echo("                BoxUsage\n");
+                        echo("                    " . $responseMetadata->getBoxUsage() . "\n");
+                    }
+                } 
+
+           
+     } catch (Amazon_SimpleDB_Exception $ex) {
+            
+         echo("Caught Exception: " . $ex->getMessage() . "\n");
+         echo("Response Status Code: " . $ex->getStatusCode() . "\n");
+         echo("Error Code: " . $ex->getErrorCode() . "\n");
+         echo("Error Type: " . $ex->getErrorType() . "\n");
+         echo("Box Usage: " . $ex->getBoxUsage() . "\n");
+         echo("Request ID: " . $ex->getRequestId() . "\n");
+         echo("XML: " . $ex->getXML() . "\n");
+     }
+ }
+            

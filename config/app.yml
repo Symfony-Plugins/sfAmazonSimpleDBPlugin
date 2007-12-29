@@ -1,0 +1,4 @@
+all:
+  sfAmazonSimpleDBPlugin:
+    aws_access_key:        <type your public key here>
+    aws_secret_key:        <type your secret key here>
