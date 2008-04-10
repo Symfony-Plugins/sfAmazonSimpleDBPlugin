@@ -490,7 +490,7 @@ class Amazon_SimpleDB_Client implements Amazon_SimpleDB_Interface
         if (0 === $signatureVersion) {
             $data .=  $parameters['Action'] .  $parameters['Timestamp'];
         } elseif (1 === $signatureVersion) {
-            uksort($parameters, 'strnatcasecmp');
+            uksort($parameters, 'strcasecmp');
             unset ($parameters['Signature']);
                 
             foreach ($parameters as $parameterName => $parameterValue) {
